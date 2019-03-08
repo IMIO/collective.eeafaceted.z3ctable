@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+from collective.eeafaceted.z3ctable.interfaces import IFacetedCheckBoxColumn
 from collective.eeafaceted.z3ctable.interfaces import IFacetedColumn
 from collective.eeafaceted.z3ctable import _
 from datetime import date
@@ -84,20 +85,29 @@ class BaseColumn(column.GetAttrColumn):
 
 class BaseColumnHeader(SortingColumnHeader):
 
-    def render(self):
+    def _header_content(self):
+        """ """
         header = translate(self.column.header,
                            domain='collective.eeafaceted.z3ctable',
                            context=self.request)
-        # header can be an image or a text
+        return header
+
+    def _header_image(self, header):
+        """header can be an image or a text."""
         if self.column.header_image:
             header = u'<img src="{0}/{1}" title="{2}" />'.format(self.table.portal_url,
                                                                  self.column.header_image,
                                                                  header)
-        # inject some javascript in the header?
+        return header
+
+    def _header_js(self, header):
+        """Inject some javascript in the header?"""
         if self.column.header_js:
             header = self.column.header_js + header
-        # a column can specifically declare that it is not sortable
-        # by setting sort_index to -1
+        return header
+
+    def _header_sorting(self, header):
+        """ """
         if not self.column.sort_index == -1:
             sort_on_name = self.table.sorting_criterion_name
             if sort_on_name and (self.column.sort_index or self.column.attrName):
@@ -113,7 +123,7 @@ class BaseColumnHeader(SortingColumnHeader):
                                          context=self.request,
                                          default=contray_sort_order_msgid)
                     html = u'<span>{0}</span><a class="sort_arrow_enabled" href="{1}#{2}" title="{3}">{4}</a>'
-                    return html.format(header, faceted_url, query_string, sort_msg, order_arrow)
+                    header = html.format(header, faceted_url, query_string, sort_msg, order_arrow)
                 else:
                     sort_ascending_msg = translate("Sort ascending",
                                                    domain='collective.eeafaceted.z3ctable',
@@ -125,9 +135,25 @@ class BaseColumnHeader(SortingColumnHeader):
                                                     default="Sort descending")
                     html = (u'<span>{0}</span><a class="sort_arrow_disabled" href="{1}#{2}" title="{3}">{4}</a>'
                             '<a class="sort_arrow_disabled" href="{5}#{6}" title="{7}"><span>{8}</span></a>')
-                    return html.format(header, faceted_url, query_string, sort_ascending_msg, '&#9650;',
-                                       faceted_url, query_string + '&reversed=on', sort_descending_msg,
-                                       '&#9660;')
+                    header = html.format(header, faceted_url, query_string, sort_ascending_msg, '&#9650;',
+                                         faceted_url, query_string + '&reversed=on', sort_descending_msg,
+                                         '&#9660;')
+        return header
+
+    def render(self):
+        # get base header content
+        header = self._header_content()
+
+        # header can be an image or a text
+        header = self._header_image(header)
+
+        # inject some javascript in the header?
+        header = self._header_js(header)
+
+        # a column can specifically declare that it is not sortable
+        # by setting sort_index to -1
+        header = self._header_sorting(header)
+
         return header
 
     @property
@@ -176,6 +202,39 @@ class BaseColumnHeader(SortingColumnHeader):
             else:
                 return '&#9660;'
         return u''
+
+
+class CheckBoxColumnHeader(BaseColumnHeader):
+    """ """
+
+    def _header_content(self):
+        """ """
+        select_unselect_items_title = translate(
+            'select_unselect_items',
+            domain='collective.eeafaceted.z3ctable',
+            context=self.request,
+            default="Select/unselect all")
+        select_unselect_items_checked = self.column.checked_by_default and "checked " or ""
+        select_unselect_items = u'<input type="checkbox" id="select_unselect_items" ' \
+            u'onClick="{0}" title="{1}" {2}/><label>Select all</label>'.format(
+                "toggleCheckboxes('{0}')".format(self.column.name),
+                select_unselect_items_title,
+                select_unselect_items_checked)
+        select_all_pages = u''
+        if self.column.show_all_pages_checkbox:
+            select_all_pages_title = translate(
+                'select_all_pages',
+                domain='collective.eeafaceted.z3ctable',
+                context=self.request,
+                default="Select all pages")
+            select_all_pages_checked = self.column.all_pages_checked_by_default and "checked " or ""
+            select_all_pages = u'<br /><input type="checkbox" id="select_all_pages" ' \
+                u'onClick="{0}" title="{1}" {2}/><label>All pages</label>'.format(
+                    "selectAllPages('{0}')".format(self.column.name),
+                    select_all_pages_title,
+                    select_all_pages_checked)
+
+        return select_unselect_items + select_all_pages
 
 
 class AwakeObjectGetAttrColumn(BaseColumn):
@@ -456,24 +515,23 @@ class CheckBoxColumn(BaseColumn):
       Display a checkbox.
     """
 
+    implements(IFacetedCheckBoxColumn)
+
     name = 'select_item'
     checked_by_default = True
+    show_all_pages_checkbox = True
+    all_pages_checked_by_default = True
     attrName = 'UID'
+    sort_index = -1
     weight = 100
-
-    def renderHeadCell(self):
-        """ """
-        title = translate('select_unselect_items',
-                          domain='collective.eeafaceted.z3ctable',
-                          context=self.request,
-                          default="Select/unselect all")
-        return u'<input type="checkbox" id="select_unselect_items" onClick="%s" title="%s" %s/>' \
-            % ("toggleCheckboxes('%s')" % self.name, title, self.checked_by_default and "checked " or "")
+    header_js = '<script type="text/javascript">jQuery(document).ready(' \
+        'initializeAllPagesCheckbox("{0}"));</script>'.format(name)
 
     def renderCell(self, item):
         """ """
-        return u'<input type="checkbox" name="%s" value="%s" %s/>' \
-            % (self.name, self.getValue(item), self.checked_by_default and "checked " or "")
+        checked = self.checked_by_default and "checked " or ""
+        return u'<input type="checkbox" name="{0}" value="{1}" {2}/>'.format(
+            self.name, self.getValue(item), checked)
 
     def getCSSClasses(self, item):
         """ """

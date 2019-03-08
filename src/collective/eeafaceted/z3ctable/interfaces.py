@@ -20,6 +20,10 @@ class IFacetedColumn(IColumn):
     """ """
 
 
+class IFacetedCheckBoxColumn(IFacetedColumn):
+    """ """
+
+
 class ITopAboveNavManager(IViewletManager):
     """A viewlet manager that sits at the top of the rendered table,
        above the batching navigation."""
