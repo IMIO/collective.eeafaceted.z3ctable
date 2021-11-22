@@ -2,6 +2,7 @@
 from collective.eeafaceted.z3ctable import _
 from collective.eeafaceted.z3ctable.interfaces import IFacetedColumn
 from collective.excelexport.exportables.dexterityfields import get_exportable_for_fieldname
+from datetime import date
 from datetime import datetime
 from DateTime.DateTime import DateTime
 from imio.helpers import EMPTY_DATE
@@ -21,6 +22,7 @@ from z3c.table.header import SortingColumnHeader
 from zope.component import getMultiAdapter
 from zope.component import queryUtility
 from zope.i18n import translate
+from zope.interface import implementer
 from zope.interface import implements
 from zope.schema.interfaces import IVocabularyFactory
 
@@ -45,9 +47,12 @@ except pkg_resources.DistributionNotFound:
     HAS_Z3CFORM_DATAGRIDFIELD = False
 
 
-class BaseColumn(column.GetAttrColumn):
+EMPTY_STRING = '__empty_string__'
+EMPTY_DATE = date(1950, 1, 1)
 
-    implements(IFacetedColumn)
+
+@implementer(IFacetedColumn)
+class BaseColumn(column.GetAttrColumn):
 
     sort_index = None
     # as we use setUpColumns, weight is 1 for every columns
