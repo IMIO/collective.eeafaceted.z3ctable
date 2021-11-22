@@ -11,7 +11,7 @@ from z3c.table.interfaces import INoneCell
 from z3c.table.table import SequenceTable
 from zope.component import getAdapters
 from zope.component import queryMultiAdapter
-from zope.interface import implements
+from zope.interface import implements, implementer
 
 import html
 import logging
@@ -112,9 +112,8 @@ class ExtendedCSSTable(SequenceTable):
         return renderedCell
 
 
+@implementer(IFacetedTable)
 class FacetedTableView(BrowserView, ExtendedCSSTable):
-
-    implements(IFacetedTable)
 
     # workaround so z3c.table does not manage batching
     startBatchingAt = 9999
