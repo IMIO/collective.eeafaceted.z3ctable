@@ -1,6 +1,8 @@
 # encoding: utf-8
 from collective.eeafaceted.z3ctable import _
 from collective.eeafaceted.z3ctable.interfaces import IFacetedColumn
+from collective.eeafaceted.z3ctable.utils import base_getattr
+from collective.eeafaceted.z3ctable.utils import get_user_fullname
 from collective.excelexport.exportables.dexterityfields import get_exportable_for_fieldname
 from datetime import date
 from datetime import datetime
