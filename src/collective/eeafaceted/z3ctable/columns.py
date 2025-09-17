@@ -44,7 +44,7 @@ except PackageNotFoundError:
 
 try:
     distribution("collective.z3cform.datagridfield")
-    from collective.z3cform.datagridfield.datagridfield import DataGridField
+    from collective.z3cform.datagridfield.datagridfield import DataGridFieldWidget
 
     HAS_Z3CFORM_DATAGRIDFIELD = True
 except PackageNotFoundError:
@@ -720,7 +720,7 @@ class PrettyLinkWithAdditionalInfosColumn(PrettyLinkColumn):
 
                     if self.simplified_datagridfield and \
                        HAS_Z3CFORM_DATAGRIDFIELD and \
-                       isinstance(widget, DataGridField):
+                       isinstance(widget, DataGridFieldWidget):
                         widget._value = value
                     else:
                         converter = IDataConverter(widget)
@@ -742,7 +742,7 @@ class PrettyLinkWithAdditionalInfosColumn(PrettyLinkColumn):
                 # render the widget
                 if self.simplified_datagridfield and \
                    HAS_Z3CFORM_DATAGRIDFIELD and \
-                   isinstance(widget, DataGridField):
+                   isinstance(widget, DataGridFieldWidget):
                     _rendered_value = self._render_datagridfield(view, widget)
                 else:
                     _rendered_value = widget.render()
