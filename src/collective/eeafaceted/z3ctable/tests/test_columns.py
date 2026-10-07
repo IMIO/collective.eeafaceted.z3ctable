@@ -18,6 +18,7 @@ from collective.eeafaceted.z3ctable.columns import RelationPrettyLinkColumn
 from collective.eeafaceted.z3ctable.columns import RelationTitleColumn
 from collective.eeafaceted.z3ctable.columns import VocabularyColumn
 from collective.eeafaceted.z3ctable.testing import IntegrationTestCase
+from collective.eeafaceted.z3ctable.testing import plone6_regression
 from collective.eeafaceted.z3ctable.tests.views import CALL_RESULT
 from datetime import date
 from datetime import datetime
@@ -37,6 +38,7 @@ from zope.component import queryMultiAdapter
 from zope.intid.interfaces import IIntIds
 
 import html
+import lxml.html
 import pytz
 
 
@@ -741,6 +743,144 @@ class TestColumns(IntegrationTestCase):
         table.update(batch)
         self.assertFalse(malicious in table.render())
         self.assertTrue(html.escape(malicious) in table.render())
+
+    def test_HeaderColumn_active_sort(self):
+        """The header of the column the table is sorted on shows one arrow, linking to the reversed order."""
+        request = self.portal.REQUEST
+        # the user clicked the "sort ascending" arrow of the Title column
+        # (new request: the setUp table stored the default sorting in the form)
+        request.form.clear()
+        request.form['c2[]'] = 'sortable_title'
+        table = self.eea_folder.restrictedTraverse('faceted-table-view')
+        column = BaseColumn(self.portal, request, table)
+        table.nameColumn(column, 'Title')
+        column.sort_index = 'sortable_title'
+        header = lxml.html.fragment_fromstring(column.renderHeadCell(), create_parent='div')
+        links = header.findall('a')
+        self.assertEqual(len(links), 1)
+        self.assertEqual(links[0].get('class'), 'sort_arrow_enabled')
+        self.assertEqual(links[0].get('title'), 'Sort descending')
+        self.assertEqual(links[0].text, u'▲')
+        self.assertEqual(sorted(links[0].get('href').split('#')[1].split('&')),
+                         ['c2=sortable_title', 'reversed=on'])
+        # then the "sort descending" one: the link goes back to the ascending order
+        request.form['reversed'] = 'on'
+        table = self.eea_folder.restrictedTraverse('faceted-table-view')
+        column = BaseColumn(self.portal, request, table)
+        table.nameColumn(column, 'Title')
+        column.sort_index = 'sortable_title'
+        header = lxml.html.fragment_fromstring(column.renderHeadCell(), create_parent='div')
+        links = header.findall('a')
+        self.assertEqual(len(links), 1)
+        self.assertEqual(links[0].get('title'), 'Sort ascending')
+        self.assertEqual(links[0].text, u'▼')
+        self.assertEqual(links[0].get('href').split('#')[1], 'c2=sortable_title')
+
+    def test_BooleanColumn_getCSSClasses(self):
+        """The <td> gets a CSS class with the boolean value."""
+        table = self.faceted_z3ctable_view
+        column = BooleanColumn(self.portal, self.portal.REQUEST, table)
+        table.nameColumn(column, 'is_folderish')
+        tt = api.content.create(container=self.eea_folder, type='testingtype', title='My testing type')
+        folderish_brain = self.portal.portal_catalog(UID=self.eea_folder.UID())[0]
+        not_folderish_brain = self.portal.portal_catalog(UID=tt.UID())[0]
+        self.assertEqual(column.getCSSClasses(folderish_brain),
+                         {'th': 'th_header_is_folderish', 'td': 'td_cell_is_folderish bool_value_true'})
+        self.assertEqual(column.getCSSClasses(not_folderish_brain),
+                         {'th': 'th_header_is_folderish', 'td': 'td_cell_is_folderish bool_value_false'})
+
+    @plone6_regression
+    def test_VocabularyColumn_non_string_value(self):
+        """An integer key is looked up in the vocabulary."""
+        table = self.faceted_z3ctable_view
+        column = VocabularyColumn(self.portal, self.portal.REQUEST, table)
+        # caching fails on integer values ('_'.join in _store_cached_result), on Plone 4 too
+        column.use_caching = False
+        column.the_object = True
+        column.attrName = 'priority'
+        column.vocabulary = 'collective.eeafaceted.z3ctable.testingintvocabulary'
+        self.eea_folder.priority = 2
+        brain = self.portal.portal_catalog(UID=self.eea_folder.UID())[0]
+        self.assertEqual(column.renderCell(brain), u'Normal')
+
+    @plone6_regression
+    def test_AbbrColumn_non_string_value(self):
+        """An integer key is looked up in both vocabularies."""
+        table = self.faceted_z3ctable_view
+        column = AbbrColumn(self.portal, self.portal.REQUEST, table)
+        column.use_caching = False
+        column.the_object = True
+        column.attrName = 'priority'
+        column.vocabulary = 'collective.eeafaceted.z3ctable.testingintvocabulary'
+        column.full_vocabulary = 'collective.eeafaceted.z3ctable.testingintvocabulary'
+        self.eea_folder.priority = 2
+        brain = self.portal.portal_catalog(UID=self.eea_folder.UID())[0]
+        self.assertEqual(column.renderCell(brain), u"<abbr title='Normal'>Normal</abbr>")
+
+    def test_BaseColumn_cached_result(self):
+        """A rendered multi-valued cell is cached: same value, same result without vocabulary lookup."""
+        table = self.faceted_z3ctable_view
+        column = VocabularyColumn(self.portal, self.portal.REQUEST, table)
+        column.attrName = 'Title'
+        column.vocabulary = 'collective.eeafaceted.z3ctable.testingvocabulary'
+        self.eea_folder.setTitle(('existing_key1', 'existing_key2'))
+        self.eea_folder.reindexObject(idxs=['Title', ])
+        brain = self.portal.portal_catalog(UID=self.eea_folder.UID())[0]
+        self.assertEqual(column.renderCell(brain), u'Existing vélue 1, Existing vélue 2')
+        self.assertEqual(column._cached_result,
+                         {'existing_key1_existing_key2': u'Existing vélue 1, Existing vélue 2'})
+        # the second rendering is served from the cache
+        column._cached_result['existing_key1_existing_key2'] = u'Cached'
+        self.assertEqual(column.renderCell(brain), u'Cached')
+
+    @plone6_regression
+    def test_BaseColumn_cached_result_single_value(self):
+        """A rendered single-valued cell is cached: same value, same result without vocabulary lookup."""
+        table = self.faceted_z3ctable_view
+        column = VocabularyColumn(self.portal, self.portal.REQUEST, table)
+        column.attrName = 'Title'
+        column.vocabulary = 'collective.eeafaceted.z3ctable.testingvocabulary'
+        self.eea_folder.setTitle('existing_key1')
+        self.eea_folder.reindexObject(idxs=['Title', ])
+        brain = self.portal.portal_catalog(UID=self.eea_folder.UID())[0]
+        self.assertEqual(column.renderCell(brain), u'Existing vélue 1')
+        self.assertEqual(column._cached_result, {'existing_key1': u'Existing vélue 1'})
+        # the second rendering is served from the cache
+        column._cached_result['existing_key1'] = u'Cached'
+        self.assertEqual(column.renderCell(brain), u'Cached')
+
+    def test_PrettyLinkWithAdditionalInfosColumn_highlighted_excluded_fields(self):
+        """Highlighted fields get a CSS class, excluded fields are not displayed."""
+        table = self.faceted_z3ctable_view
+        tt = api.content.create(container=self.eea_folder, type='testingtype',
+                                title='My testing type', afield=u'My field content')
+        brain = self.portal.portal_catalog(UID=tt.UID())[0]
+        column = PrettyLinkWithAdditionalInfosColumn(self.portal, self.portal.REQUEST, table)
+        column.attrName = 'Title'
+        column.ai_highlighted_fields = ['afield']
+        self.assertIn(u'<div class="discreet highlight "><label class="horizontal">A field</label>',
+                      column.renderCell(brain))
+        column = PrettyLinkWithAdditionalInfosColumn(self.portal, self.portal.REQUEST, table)
+        column.attrName = 'Title'
+        column.ai_excluded_fields = ['afield']
+        rendered = column.renderCell(brain)
+        self.assertNotIn(u'A field', rendered)
+        self.assertNotIn(u'My field content', rendered)
+        self.assertIn(u'Boolean field', rendered)
+
+    @plone6_regression
+    def test_PrettyLinkWithAdditionalInfosColumn_fieldset(self):
+        """Fields of a fieldset (form group) are displayed too."""
+        table = self.faceted_z3ctable_view
+        column = PrettyLinkWithAdditionalInfosColumn(self.portal, self.portal.REQUEST, table)
+        column.attrName = 'Title'
+        obj = api.content.create(container=self.eea_folder, type='testingtypefieldset', title='My testing type',
+                                 afield=u'My field content', extra_field=u'My extra field content')
+        brain = self.portal.portal_catalog(UID=obj.UID())[0]
+        rendered = column.renderCell(brain)
+        self.assertIn(u'My field content', rendered)
+        self.assertIn(u'<label class="horizontal">Extra field</label>', rendered)
+        self.assertIn(u'My extra field content', rendered)
 
 
 class BrainsWithoutBatchTable(Table):

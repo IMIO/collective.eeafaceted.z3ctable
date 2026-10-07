@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Base module for unittesting."""
 
+from eea.facetednavigation.interfaces import ICriteria
 from eea.facetednavigation.layout.interfaces import IFacetedLayout
 from eea.facetednavigation.subtypes.interfaces import IPossibleFacetedNavigable
 from plone import api
@@ -17,6 +18,8 @@ from plone.app.testing import TEST_USER_NAME
 # from plone.formwidget.contenttree import ObjPathSourceBinder
 from plone.supermodel import model
 from plone.testing import z2
+from plone.testing import zope
+from Products.CMFPlone.utils import getFSVersionTuple
 from z3c.relationfield.schema import RelationChoice
 from z3c.relationfield.schema import RelationList
 from zope import schema
@@ -26,6 +29,11 @@ from zope.interface import alsoProvides
 
 import collective.eeafaceted.z3ctable
 import unittest
+
+
+IS_PLONE_6 = getFSVersionTuple()[0] >= 6
+# decorates a test pinning a Plone 4 behaviour that is broken on Plone 6
+plone6_regression = unittest.expectedFailure if IS_PLONE_6 else (lambda f: f)
 
 
 class ITestingType(model.Schema):
@@ -52,6 +60,15 @@ class ITestingType(model.Schema):
         default=[],
         value_type=RelationChoice(title=u"Related", vocabulary="plone.app.vocabularies.Catalog"),
         required=False,
+    )
+
+
+class ITestingTypeWithFieldset(ITestingType):
+
+    model.fieldset('extra', label=u'Extra', fields=['extra_field'])
+    extra_field = schema.TextLine(
+        title=u'Extra field',
+        required=False
     )
 
 
@@ -132,9 +149,25 @@ FUNCTIONAL = FunctionalTesting(
 )
 
 
-ACCEPTANCE = FunctionalTesting(bases=(FIXTURE,
+class AcceptanceTesting(FunctionalTesting):
+    """Robot layer (MIGRATION.md Known issues):
+       - the "Portal type" criterion goes on top: on the right, it covers the right part of the wide table;
+       - eea.facetednavigation 16 loads its bundles async: faceted.view may run before faceted.jquery
+         (jQuery.bbq undefined, results never loaded). Load them in document order."""
+
+    def testSetUp(self):
+        super(AcceptanceTesting, self).testSetUp()
+        ICriteria(self['portal']['eea_folder']).edit('c1', position='top')
+        registry = self['portal'].portal_registry
+        for bundle in ('faceted.jquery', 'faceted.view', 'faceted.edit'):
+            registry['plone.bundles/{0}.load_async'.format(bundle)] = False
+        import transaction
+        transaction.commit()
+
+
+ACCEPTANCE = AcceptanceTesting(bases=(FIXTURE,
                                       REMOTE_LIBRARY_BUNDLE_FIXTURE,
-                                      z2.ZSERVER_FIXTURE),
+                                      zope.WSGI_SERVER_FIXTURE),
                                name="ACCEPTANCE")
 
 

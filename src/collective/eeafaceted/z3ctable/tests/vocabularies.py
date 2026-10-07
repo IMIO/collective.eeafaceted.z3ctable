@@ -37,3 +37,14 @@ class TestingFullVocabulary(object):
 
 
 TestingFullVocabularyFactory = TestingFullVocabulary()
+
+
+@implementer(IVocabularyFactory)
+class TestingIntVocabulary(object):
+
+    def __call__(self, context):
+        """Keys are integers."""
+        return SimpleVocabulary([SimpleTerm(1, '1', 'Low'), SimpleTerm(2, '2', 'Normal')])
+
+
+TestingIntVocabularyFactory = TestingIntVocabulary()

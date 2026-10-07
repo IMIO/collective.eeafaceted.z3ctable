@@ -1,10 +1,21 @@
 # -*- coding: utf-8 -*-
 """Setup/installation tests for this package."""
 
+from collective.eeafaceted import z3ctable
+from collective.eeafaceted.z3ctable import columns
+from collective.eeafaceted.z3ctable import interfaces
+from collective.eeafaceted.z3ctable import testing
+from collective.eeafaceted.z3ctable.browser import views
+from collective.eeafaceted.z3ctable.interfaces import ICollectiveEeafacetedZ3ctableLayer
 from collective.eeafaceted.z3ctable.testing import IntegrationTestCase
+from collective.eeafaceted.z3ctable.testing import IS_PLONE_6
 from collective.eeafaceted.z3ctable.testing import NAKED_PLONE_INTEGRATION
+from collective.eeafaceted.z3ctable.tests import views as test_views
+from plone import api
 from plone.app.testing import applyProfile
 from plone.base.utils import get_installer
+from plone.browserlayer.utils import registered_layers
+from zope.i18n import translate
 
 import unittest
 
@@ -32,6 +43,59 @@ class TestInstall(IntegrationTestCase):
         from collective.eeafaceted.z3ctable.interfaces import ICollectiveEeafacetedZ3ctableLayer
         from plone.browserlayer import utils
         self.assertTrue(ICollectiveEeafacetedZ3ctableLayer in utils.registered_layers())
+
+    @unittest.skipIf(not IS_PLONE_6, 'Plone 6 resource registry')
+    def test_js_registered(self):
+        """The JS and the JS variables are registered as 2 bundles."""
+        self.assertEqual(
+            api.portal.get_registry_record('plone.bundles/faceted-z3ctable.jscompilation'),
+            '++resource++collective.eeafaceted.z3ctable/collective.eeafaceted.z3ctable.js')
+        self.assertEqual(
+            api.portal.get_registry_record('plone.bundles/faceted-vars-z3ctable.jscompilation'),
+            'collective_eeafaceted_z3ctable_js_variables.js')
+        self.assertTrue(api.portal.get_registry_record('plone.bundles/faceted-z3ctable.enabled'))
+        self.assertTrue(api.portal.get_registry_record('plone.bundles/faceted-vars-z3ctable.enabled'))
+
+    @unittest.skipIf(IS_PLONE_6, 'Plone 4 portal_javascripts')
+    def test_js_registered_plone4(self):
+        """The JS and the JS variables are registered in portal_javascripts."""
+        resource_ids = api.portal.get_tool('portal_javascripts').getResourceIds()
+        self.assertIn('++resource++collective.eeafaceted.z3ctable/collective.eeafaceted.z3ctable.js', resource_ids)
+        self.assertIn('collective_eeafaceted_z3ctable_js_variables.js', resource_ids)
+
+    @unittest.skipIf(not IS_PLONE_6, 'uninstall profile added for Plone 6')
+    def test_uninstall_browserlayer(self):
+        """The browser layer is removed at uninstall."""
+        self.installer.uninstall_product('collective.eeafaceted.z3ctable')
+        self.assertNotIn(ICollectiveEeafacetedZ3ctableLayer, registered_layers())
+
+    def test_translations(self):
+        """French translations."""
+        self.assertEqual(
+            translate(u'Sort ascending', domain='collective.eeafaceted.z3ctable', target_language='fr'),
+            u'Cliquez ici pour trier les éléments par ordre croissant')
+        self.assertEqual(
+            translate(u'boolean_value_True', domain='collective.eeafaceted.z3ctable', target_language='fr'),
+            u'Oui')
+
+    def test_public_api(self):
+        """Names imported by other packages (imio.dms.mail, collective.eeafaceted.dashboard, ...)."""
+        for module, names in (
+                (columns, ('AbbrColumn', 'ActionsColumn', 'AwakeObjectMethodColumn', 'BaseColumn',
+                           'BaseColumnHeader', 'BooleanColumn', 'BrowserViewCallColumn', 'CheckBoxColumn',
+                           'ColorColumn', 'CreationDateColumn', 'DateColumn', 'DxWidgetRenderColumn',
+                           'ElementNumberColumn', 'I18nColumn', 'IconsColumn', 'MemberIdColumn',
+                           'ModificationDateColumn', 'PrettyLinkColumn', 'PrettyLinkWithAdditionalInfosColumn',
+                           'RelationPrettyLinkColumn', 'RelationTitleColumn', 'TitleColumn', 'VocabularyColumn',
+                           'get_user_fullname')),
+                (views, ('ExtendedCSSTable', 'FacetedTableView')),
+                (interfaces, ('IBottomAboveNavManager', 'IBottomBelowNavManager', 'ICollectiveEeafacetedZ3ctableLayer',
+                              'IFacetedColumn', 'IFacetedTable', 'ITopAboveNavManager', 'ITopBelowNavManager')),
+                (testing, ('IntegrationTestCase', 'NAKED_PLONE_INTEGRATION')),
+                (test_views, ('CALL_RESULT', )),
+                (z3ctable, ('_', ))):
+            for name in names:
+                self.assertTrue(hasattr(module, name), '{0}.{1}'.format(module.__name__, name))
 
 
 class TestInstallDependencies(unittest.TestCase):
