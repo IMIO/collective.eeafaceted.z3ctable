@@ -3,7 +3,7 @@
 from Products.Five.browser import BrowserView
 
 
-CALL_RESULT = 'Browser view call result'
+CALL_RESULT = "Browser view call result"
 
 
 class TestingBrowserCallView(BrowserView):
