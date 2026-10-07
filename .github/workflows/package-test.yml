@@ -18,6 +18,7 @@ jobs:
             python_version: ${{ matrix.python_version }}
             requirements_file: requirements-${{ matrix.plone_version }}.txt
             system_dependencies: ${{ matrix.system_dependencies || '' }}
+            test_command: 'TZ=UTC bin/test -t !robot'
             uv_version: ${{ matrix.uv_version || '0.7.20'}}
     coverage:
         uses: IMIO/gha-workflows/.github/workflows/package-test-coverage.yml@v1
