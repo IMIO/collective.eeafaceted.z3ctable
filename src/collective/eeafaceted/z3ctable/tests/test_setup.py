@@ -8,11 +8,11 @@ from collective.eeafaceted.z3ctable import testing
 from collective.eeafaceted.z3ctable.browser import views
 from collective.eeafaceted.z3ctable.interfaces import ICollectiveEeafacetedZ3ctableLayer
 from collective.eeafaceted.z3ctable.testing import IntegrationTestCase
-from collective.eeafaceted.z3ctable.testing import IS_PLONE_6
 from collective.eeafaceted.z3ctable.testing import NAKED_PLONE_INTEGRATION
 from collective.eeafaceted.z3ctable.tests import views as test_views
 from plone import api
 from plone.app.testing import applyProfile
+from plone.base.interfaces import IBundleRegistry
 from plone.base.utils import get_installer
 from plone.browserlayer.utils import registered_layers
 from zope.i18n import translate
@@ -29,7 +29,7 @@ class TestInstall(IntegrationTestCase):
         self.installer = get_installer(self.portal)
 
     def test_product_installed(self):
-        """Test if collective.eeafaceted.z3ctable is installed with portal_quickinstaller."""
+        """Test if collective.eeafaceted.z3ctable is installed."""
         self.assertTrue(
             self.installer.is_product_installed("collective.eeafaceted.z3ctable")
         )
@@ -51,7 +51,6 @@ class TestInstall(IntegrationTestCase):
 
         self.assertTrue(ICollectiveEeafacetedZ3ctableLayer in utils.registered_layers())
 
-    @unittest.skipIf(not IS_PLONE_6, "Plone 6 resource registry")
     def test_js_registered(self):
         """The JS and the JS variables are registered as 2 bundles."""
         self.assertEqual(
@@ -75,21 +74,20 @@ class TestInstall(IntegrationTestCase):
             )
         )
 
-    @unittest.skipIf(IS_PLONE_6, "Plone 4 portal_javascripts")
-    def test_js_registered_plone4(self):
-        """The JS and the JS variables are registered in portal_javascripts."""
-        resource_ids = api.portal.get_tool("portal_javascripts").getResourceIds()
-        self.assertIn(
-            "++resource++collective.eeafaceted.z3ctable/collective.eeafaceted.z3ctable.js",
-            resource_ids,
-        )
-        self.assertIn("collective_eeafaceted_z3ctable_js_variables.js", resource_ids)
-
-    @unittest.skipIf(not IS_PLONE_6, "uninstall profile added for Plone 6")
     def test_uninstall_browserlayer(self):
         """The browser layer is removed at uninstall."""
         self.installer.uninstall_product("collective.eeafaceted.z3ctable")
         self.assertNotIn(ICollectiveEeafacetedZ3ctableLayer, registered_layers())
+
+    def test_uninstall_bundles(self):
+        """The 2 bundles are removed at uninstall."""
+        self.installer.uninstall_product("collective.eeafaceted.z3ctable")
+        bundles = api.portal.get_tool("portal_registry").collectionOfInterface(
+            IBundleRegistry, prefix="plone.bundles"
+        )
+        self.assertNotIn("faceted-z3ctable", bundles)
+        self.assertNotIn("faceted-vars-z3ctable", bundles)
+        self.assertIn("faceted.view", bundles)
 
     def test_translations(self):
         """French translations."""

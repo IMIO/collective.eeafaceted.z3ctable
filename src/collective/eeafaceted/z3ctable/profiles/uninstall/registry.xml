@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<registry>
+  <records interface="plone.base.interfaces.IBundleRegistry"
+           prefix="plone.bundles/faceted-vars-z3ctable"
+           remove="True" />
+  <records interface="plone.base.interfaces.IBundleRegistry"
+           prefix="plone.bundles/faceted-z3ctable"
+           remove="True" />
+</registry>

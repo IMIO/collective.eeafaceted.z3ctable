@@ -2,8 +2,7 @@
 Documentation  collective.eeafaceted.z3ctable keywords, built on the ui_plone${PLONE_MAJOR}.robot keywords.
 ...            Robot Framework 3.1 syntax (FOR ... END; shared with the Plone 4.3 environment, RF 3.2.2).
 ...            The faceted folder is eea_folder of the test fixture (layout faceted-table-items) with the
-...            default eea criteria: c1 portal type (default Document; moved on top by the robot layer),
-...            c2 hidden sorting.
+...            default eea criteria: c1 portal type (default Document), c2 hidden sorting.
 Resource  ui_plone${PLONE_MAJOR}.robot
 
 

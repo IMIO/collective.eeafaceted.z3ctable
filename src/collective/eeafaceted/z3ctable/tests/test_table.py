@@ -10,7 +10,6 @@ from collective.eeafaceted.z3ctable.interfaces import IBottomBelowNavManager
 from collective.eeafaceted.z3ctable.interfaces import ITopAboveNavManager
 from collective.eeafaceted.z3ctable.interfaces import ITopBelowNavManager
 from collective.eeafaceted.z3ctable.testing import IntegrationTestCase
-from collective.eeafaceted.z3ctable.testing import plone6_regression
 from eea.facetednavigation.interfaces import ICriteria
 from plone import api
 from plone.batching import Batch
@@ -131,7 +130,6 @@ class TestTable(IntegrationTestCase):
         )
         self.assertEqual([record.levelname for record in handler.records], ["ERROR"])
 
-    @plone6_regression
     def test_Table_listing_css_class(self):
         """The table has the Plone 'listing' CSS class, other packages' CSS rely on it."""
         table = self.faceted_z3ctable_view
@@ -184,11 +182,7 @@ class TestFacetedTableItems(IntegrationTestCase):
             .get("src")
             .endswith("/++resource++collective.eeafaceted.z3ctable/refresh.gif")
         )
-        # Plone 4 translates the msgid in English, Plone 6 does not (macro used without its i18n:domain)
-        self.assertIn(
-            refresh.text_content().strip(),
-            ("Refresh search", "Refresh search results."),
-        )
+        self.assertEqual(refresh.text_content().strip(), "Refresh search")
         # 4 viewlet managers around the batch navigation
         for div_id, name, iface in (
             ("viewlet-top-above-nav", "topabovenav", ITopAboveNavManager),

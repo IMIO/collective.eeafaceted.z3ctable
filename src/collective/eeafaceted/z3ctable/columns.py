@@ -13,8 +13,8 @@ from imio.helpers.content import base_getattr
 from imio.helpers.content import get_user_fullname
 from importlib.metadata import PackageNotFoundError
 from plone import api
-from Products.CMFPlone.utils import base_hasattr
-from Products.CMFPlone.utils import safe_unicode
+from plone.base.utils import base_hasattr
+from plone.base.utils import safe_text
 from six.moves.urllib.parse import urlencode
 from z3c.form.interfaces import IDataConverter
 from z3c.form.interfaces import IDataManager
@@ -69,7 +69,7 @@ class BaseColumn(column.GetAttrColumn):
     def getValue(self, item):
         """ """
         if self.the_object:
-            attr = safe_unicode(base_getattr(self._getObject(item), self.attrName))
+            attr = safe_text(base_getattr(self._getObject(item), self.attrName))
             if callable(attr):
                 return attr()
             return attr
@@ -101,17 +101,13 @@ class BaseColumn(column.GetAttrColumn):
 
     def _get_cached_result(self, value):
         if getattr(self, "_cached_result", None):
-            if hasattr(value, "__iter__"):
-                value = "_".join(value)
-            return self._cached_result.get(value, None)
+            return self._cached_result.get(_cache_key(value), None)
 
     def _store_cached_result(self, value, result):
         """ """
         if getattr(self, "_cached_result", None) is None:
             self._cached_result = {}
-        if hasattr(value, "__iter__"):
-            value = "_".join(value)
-        self._cached_result[value] = result
+        self._cached_result[_cache_key(value)] = result
 
 
 class BaseColumnHeader(SortingColumnHeader):
@@ -253,7 +249,7 @@ class AwakeObjectMethodColumn(BaseColumn):
     def renderCell(self, item):
         obj = self._getObject(item)
         try:
-            return safe_unicode(base_getattr(obj, self.attrName)(**self.params)) or "-"
+            return safe_text(base_getattr(obj, self.attrName)(**self.params)) or "-"
         except TypeError:
             return "-"
 
@@ -307,7 +303,7 @@ class MemberIdColumn(BaseColumn):
         value = self.getValue(item)
         if not value or value == self.ignored_value:
             return "-"
-        return safe_unicode(get_user_fullname(value))
+        return safe_text(get_user_fullname(value))
 
 
 class DateColumn(BaseColumn):
@@ -357,7 +353,7 @@ class I18nColumn(BaseColumn):
         if value == self.defaultValue:
             return "-"
         # make sure msgid is unicode in case it contains special characters
-        msgid = safe_unicode("{0}{1}".format(self.msgid_prefix, value))
+        msgid = safe_text("{0}{1}".format(self.msgid_prefix, value))
         return translate(msgid, domain=self.i18n_domain, context=self.request)
 
 
@@ -431,20 +427,15 @@ class VocabularyColumn(BaseColumn):
 
             self._cached_vocab_instance = factory(self.context)
 
-        # make sure we have an iterable
-        if isinstance(value, str):
-            value = [value]
         res = []
-        for v in value:
+        for v in _as_list(value):
             try:
                 res.append(
-                    html.escape(
-                        safe_unicode(self._cached_vocab_instance.getTerm(v).title)
-                    )
+                    html.escape(safe_text(self._cached_vocab_instance.getTerm(v).title))
                 )
             except LookupError:
                 # in case an element is not in the vocabulary, add the value
-                res.append(safe_unicode(v))
+                res.append(safe_text(v))
         res = ", ".join(res)
         if self.use_caching:
             self._store_cached_result(value, res)
@@ -498,19 +489,16 @@ class AbbrColumn(VocabularyColumn):
             self._cached_acronym_vocab_instance = acronym_factory(self.context)
             self._cached_full_vocab_instance = full_factory(self.context)
 
-        # make sure we have an iterable
-        if isinstance(value, str):
-            value = [value]
         res = []
-        for v in value:
+        for v in _as_list(value):
             try:
                 tag_title = self._cached_full_vocab_instance.getTerm(v).title
                 tag_title = tag_title.replace("'", "&#39;")
                 res.append(
                     "<abbr title='{0}'>{1}</abbr>".format(
-                        html.escape(safe_unicode(tag_title)),
+                        html.escape(safe_text(tag_title)),
                         html.escape(
-                            safe_unicode(
+                            safe_text(
                                 self._cached_acronym_vocab_instance.getTerm(v).title
                             )
                         ),
@@ -518,7 +506,7 @@ class AbbrColumn(VocabularyColumn):
                 )
             except LookupError:
                 # in case an element is not in the vocabulary, add the value
-                tag_title = html.escape(safe_unicode(v))
+                tag_title = html.escape(safe_text(v))
                 res.append("<abbr title='{0}'>{1}</abbr>".format(tag_title, tag_title))
         # manage separator without "join" to move the separator inside the <abbr></abbr>
         res = [
@@ -696,7 +684,7 @@ class TitleColumn(BaseColumn):
         value = self.getValue(item)
         if not value:
             value = "-"
-        value = safe_unicode(value)
+        value = safe_text(value)
         return '<a href="{0}">{1}</a>'.format(item.getURL(), html.escape(value))
 
 
@@ -789,7 +777,7 @@ class PrettyLinkWithAdditionalInfosColumn(PrettyLinkColumn):
             self._cached_view = view
             view.update()
             # handle widgets
-            widgets = view.widgets.values()
+            widgets = list(view.widgets.values())
             for group in view.groups:
                 widgets.extend(group.widgets.values())
         else:
@@ -963,3 +951,15 @@ class IconsColumn(BaseColumn):
             )
             tags.append(tag)
         return self.separator.join(tags)
+
+
+def _as_list(value):
+    """A single value (str, int, bool...) as a list, other iterables as is."""
+    if isinstance(value, str) or not hasattr(value, "__iter__"):
+        return [value]
+    return value
+
+
+def _cache_key(value):
+    """Cell cache key: the same for a single value and for this value in a list."""
+    return "_".join(str(v) for v in _as_list(value))

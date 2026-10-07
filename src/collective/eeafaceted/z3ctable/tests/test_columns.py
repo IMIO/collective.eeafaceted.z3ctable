@@ -18,7 +18,6 @@ from collective.eeafaceted.z3ctable.columns import RelationPrettyLinkColumn
 from collective.eeafaceted.z3ctable.columns import RelationTitleColumn
 from collective.eeafaceted.z3ctable.columns import VocabularyColumn
 from collective.eeafaceted.z3ctable.testing import IntegrationTestCase
-from collective.eeafaceted.z3ctable.testing import plone6_regression
 from collective.eeafaceted.z3ctable.tests.views import CALL_RESULT
 from datetime import date
 from datetime import datetime
@@ -980,26 +979,22 @@ class TestColumns(IntegrationTestCase):
             },
         )
 
-    @plone6_regression
     def test_VocabularyColumn_non_string_value(self):
         """An integer key is looked up in the vocabulary."""
         table = self.faceted_z3ctable_view
         column = VocabularyColumn(self.portal, self.portal.REQUEST, table)
-        # caching fails on integer values ('_'.join in _store_cached_result), on Plone 4 too
-        column.use_caching = False
         column.the_object = True
         column.attrName = "priority"
         column.vocabulary = "collective.eeafaceted.z3ctable.testingintvocabulary"
         self.eea_folder.priority = 2
         brain = self.portal.portal_catalog(UID=self.eea_folder.UID())[0]
         self.assertEqual(column.renderCell(brain), "Normal")
+        self.assertEqual(column._cached_result, {"2": "Normal"})
 
-    @plone6_regression
     def test_AbbrColumn_non_string_value(self):
         """An integer key is looked up in both vocabularies."""
         table = self.faceted_z3ctable_view
         column = AbbrColumn(self.portal, self.portal.REQUEST, table)
-        column.use_caching = False
         column.the_object = True
         column.attrName = "priority"
         column.vocabulary = "collective.eeafaceted.z3ctable.testingintvocabulary"
@@ -1030,7 +1025,6 @@ class TestColumns(IntegrationTestCase):
         column._cached_result["existing_key1_existing_key2"] = "Cached"
         self.assertEqual(column.renderCell(brain), "Cached")
 
-    @plone6_regression
     def test_BaseColumn_cached_result_single_value(self):
         """A rendered single-valued cell is cached: same value, same result without vocabulary lookup."""
         table = self.faceted_z3ctable_view
@@ -1079,7 +1073,6 @@ class TestColumns(IntegrationTestCase):
         self.assertNotIn("My field content", rendered)
         self.assertIn("Boolean field", rendered)
 
-    @plone6_regression
     def test_PrettyLinkWithAdditionalInfosColumn_fieldset(self):
         """Fields of a fieldset (form group) are displayed too."""
         table = self.faceted_z3ctable_view

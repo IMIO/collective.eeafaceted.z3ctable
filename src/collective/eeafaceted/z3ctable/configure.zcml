@@ -7,14 +7,15 @@
     i18n_domain="collective.eeafaceted.z3ctable">
 
     <i18n:registerTranslations directory="locales" />
-<!--    <includeDependencies package="." />-->
 
     <!-- Zope2 initialization -->
     <five:registerPackage package="." initialize=".initialize" />
 
     <!-- Include configuration for dependencies listed in setup.py -->
+    <include package="collective.excelexport"/>
+    <include package="z3c.table"/>
     <include zcml:condition="installed imio.actionspanel" package="imio.actionspanel"/>
-<!--    <include zcml:condition="installed imio.prettylink" package="imio.prettylink"/>-->
+    <include zcml:condition="installed imio.prettylink" package="imio.prettylink"/>
     <include package="eea.facetednavigation"/>
 
     <!-- Include sub-packages that use their own configure.zcml files. -->
