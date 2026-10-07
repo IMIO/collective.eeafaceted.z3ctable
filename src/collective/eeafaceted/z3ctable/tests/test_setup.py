@@ -3,13 +3,10 @@
 
 from collective.eeafaceted.z3ctable.testing import IntegrationTestCase
 from collective.eeafaceted.z3ctable.testing import NAKED_PLONE_INTEGRATION
-from plone import api
 from plone.app.testing import applyProfile
 from plone.base.utils import get_installer
-from plone.browserlayer.utils import registered_layers
 
 import unittest
-
 
 
 class TestInstall(IntegrationTestCase):
@@ -28,7 +25,6 @@ class TestInstall(IntegrationTestCase):
         """Test if collective.collective.eeafaceted.z3ctable is cleanly uninstalled."""
         self.installer.uninstall_product('collective.eeafaceted.z3ctable')
         self.assertFalse(self.installer.is_product_installed('collective.eeafaceted.z3ctable'))
-       
 
     # browserlayer.xml
     def test_browserlayer(self):

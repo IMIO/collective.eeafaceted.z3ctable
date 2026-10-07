@@ -1,8 +1,6 @@
 # encoding: utf-8
 from collective.eeafaceted.z3ctable import _
 from collective.eeafaceted.z3ctable.interfaces import IFacetedColumn
-from collective.eeafaceted.z3ctable.utils import base_getattr
-from collective.eeafaceted.z3ctable.utils import get_user_fullname
 from collective.excelexport.exportables.dexterityfields import get_exportable_for_fieldname
 from datetime import datetime
 from DateTime.DateTime import DateTime
@@ -30,6 +28,8 @@ from zope.schema.interfaces import IVocabularyFactory
 
 import html
 import os
+
+
 try:
     from imio.prettylink.interfaces import IPrettyLink
     HAS_PRETTYLINK = True

@@ -22,11 +22,10 @@ from z3c.relationfield.schema import RelationList
 from zope import schema
 from zope.component import getMultiAdapter
 from zope.globalrequest.local import setLocal
+from zope.interface import alsoProvides
 
 import collective.eeafaceted.z3ctable
 import unittest
-
-from zope.interface import alsoProvides
 
 
 class ITestingType(model.Schema):

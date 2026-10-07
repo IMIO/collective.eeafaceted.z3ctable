@@ -139,7 +139,7 @@ class FacetedTableView(BrowserView, ExtendedCSSTable):
         self.update(batch)
         try:
             return self.render()
-        except Exception as exc:
+        except Exception:
             # in case an error occured, catch it or it freezes the web page
             # because faceted JS disable page and error raised does not unlock
             logger.error("Cound not render table", exc_info=True)
