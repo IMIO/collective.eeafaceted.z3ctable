@@ -1,0 +1,28 @@
+name: Package Test Workflow
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+    tests-current:
+        uses: IMIO/gha-workflows/.github/workflows/package-test-uv.yml@v1
+        strategy:
+            matrix:
+                include:
+                    - python_version: '3.13'
+                      plone_version: '6.1'
+        with:
+            buildout_config_file: test-${{ matrix.plone_version }}.cfg
+            continue_on_error: false
+            python_version: ${{ matrix.python_version }}
+            requirements_file: requirements-${{ matrix.plone_version }}.txt
+            system_dependencies: ${{ matrix.system_dependencies || '' }}
+            uv_version: ${{ matrix.uv_version || '0.7.20'}}
+    coverage:
+        uses: IMIO/gha-workflows/.github/workflows/package-test-coverage.yml@v1
+        with:
+            buildout_config_file: test-6.1.cfg
+            python_version: 3.13
+            requirements_file: requirements-6.1.txt
+            test_command: 'uvx coverage run bin/test -t !robot >> $GITHUB_STEP_SUMMARY'
