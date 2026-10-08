@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-3.0 (unreleased)
------------------
+3.0.0 (unreleased)
+------------------
 
 - Drop support for python 2.7 and Plone 4.3.
   [wboudabous, aduchene]
