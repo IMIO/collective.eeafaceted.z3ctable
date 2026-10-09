@@ -14,9 +14,9 @@ class TestingVocabulary(object):
     def __call__(self, context):
         """ """
         res = []
-        res.append(SimpleTerm('existing_key1', 'existing_key1', 'Existing vélue 1'))
-        res.append(SimpleTerm('existing_key2', 'existing_key2', 'Existing vélue 2'))
-        res.append(SimpleTerm('existing_key3', 'existing_key3', 'Existing vélue 3'))
+        res.append(SimpleTerm("existing_key1", "existing_key1", "Existing vélue 1"))
+        res.append(SimpleTerm("existing_key2", "existing_key2", "Existing vélue 2"))
+        res.append(SimpleTerm("existing_key3", "existing_key3", "Existing vélue 3"))
         return SimpleVocabulary(res)
 
 
@@ -30,10 +30,29 @@ class TestingFullVocabulary(object):
     def __call__(self, context):
         """ """
         res = []
-        res.append(SimpleTerm('existing_key1', 'existing_key1', 'Full existing value 1'))
-        res.append(SimpleTerm('existing_key2', 'existing_key2', 'Full existing value 2'))
-        res.append(SimpleTerm('existing_key3', 'existing_key3', 'Full existing value 3'))
+        res.append(
+            SimpleTerm("existing_key1", "existing_key1", "Full existing value 1")
+        )
+        res.append(
+            SimpleTerm("existing_key2", "existing_key2", "Full existing value 2")
+        )
+        res.append(
+            SimpleTerm("existing_key3", "existing_key3", "Full existing value 3")
+        )
         return SimpleVocabulary(res)
 
 
 TestingFullVocabularyFactory = TestingFullVocabulary()
+
+
+@implementer(IVocabularyFactory)
+class TestingIntVocabulary(object):
+
+    def __call__(self, context):
+        """Keys are integers."""
+        return SimpleVocabulary(
+            [SimpleTerm(1, "1", "Low"), SimpleTerm(2, "2", "Normal")]
+        )
+
+
+TestingIntVocabularyFactory = TestingIntVocabulary()

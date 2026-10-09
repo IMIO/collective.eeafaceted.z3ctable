@@ -4,7 +4,7 @@
 from zope.i18nmessageid import MessageFactory
 
 
-_ = MessageFactory('collective.eeafaceted.z3ctable')
+_ = MessageFactory("collective.eeafaceted.z3ctable")
 
 
 def initialize(context):

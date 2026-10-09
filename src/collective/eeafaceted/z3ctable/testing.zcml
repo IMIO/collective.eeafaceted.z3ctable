@@ -6,8 +6,6 @@
 
   <include package="plone.app.dexterity" />
   <include file="configure.zcml" />
-  <include package="imio.actionspanel"/>
-  <include package="imio.prettylink"/>
 
   <genericsetup:registerProfile
       name="testing"
@@ -30,5 +28,7 @@
            name="collective.eeafaceted.z3ctable.testingvocabulary" />
   <utility component=".tests.vocabularies.TestingFullVocabularyFactory"
            name="collective.eeafaceted.z3ctable.testingfullvocabulary" />
+  <utility component=".tests.vocabularies.TestingIntVocabularyFactory"
+           name="collective.eeafaceted.z3ctable.testingintvocabulary" />
 
 </configure>

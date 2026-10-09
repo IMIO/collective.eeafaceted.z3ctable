@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
-<object name="testingtype" meta_type="Dexterity FTI" i18n:domain="plone"
+<object name="testingtypefieldset" meta_type="Dexterity FTI" i18n:domain="plone"
    xmlns:i18n="http://xml.zope.org/namespaces/i18n">
- <property name="title" i18n:translate="">testingtype</property>
+ <property name="title" i18n:translate="">testingtypefieldset</property>
  <property name="description" i18n:translate="">None</property>
  <property name="icon_expr">string:contenttype/document</property>
- <property name="factory">testingtype</property>
+ <property name="factory">testingtypefieldset</property>
  <property
-    name="add_view_expr">string:${folder_url}/++add++testingtype</property>
+    name="add_view_expr">string:${folder_url}/++add++testingtypefieldset</property>
  <property name="link_target"></property>
  <property name="immediate_view">view</property>
  <property name="global_allow">True</property>
@@ -24,7 +24,7 @@
   <element value="plone.app.dexterity.behaviors.metadata.IDublinCore"/>
   <element value="plone.app.content.interfaces.INameFromTitle"/>
  </property>
- <property name="schema">collective.eeafaceted.z3ctable.testing.ITestingType</property>
+ <property name="schema">collective.eeafaceted.z3ctable.testing.ITestingTypeWithFieldset</property>
  <alias from="(Default)" to="(dynamic view)"/>
  <alias from="edit" to="@@edit"/>
  <alias from="sharing" to="@@sharing"/>

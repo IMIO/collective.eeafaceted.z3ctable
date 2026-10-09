@@ -2,13 +2,25 @@ Changelog
 =========
 
 
-3.0 (unreleased)
------------------
+3.0.0 (unreleased)
+------------------
 
 - Drop support for python 2.7 and Plone 4.3.
   [wboudabous, aduchene]
 - Plone 6.0 & Plone 6.1 compatibilities.
   [pbauer, wboudabous, aduchene]
+- Plone 6.2 compatibility, Plone 6.0 dropped.
+  [chris-adam]
+- Fixed `VocabularyColumn`, `AbbrColumn` and the cell cache with non-string values.
+  [chris-adam]
+- Fixed `PrettyLinkWithAdditionalInfosColumn` with fieldsets.
+  [chris-adam]
+- Restored the `listing` CSS class of the table and the layout translations.
+  [chris-adam]
+- Wide tables scroll horizontally (`table-responsive`).
+  [chris-adam]
+- Uninstall removes the JS bundles.
+  [chris-adam]
 
 2.28 (2024-09-18)
 -----------------
