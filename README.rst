@@ -1,6 +1,8 @@
 .. image:: https://github.com/collective/collective.eeafaceted.z3ctable/actions/workflows/main.yml/badge.svg?branch=master
     :target: https://github.com/collective/collective.eeafaceted.z3ctable/actions/workflows/main.yml
 
+.. image:: https://coveralls.io/repos/github/IMIO/collective.eeafaceted.z3ctable/badge.svg
+    :target: https://coveralls.io/github/IMIO/collective.eeafaceted.z3ctable
 
 .. image:: http://img.shields.io/pypi/v/collective.eeafaceted.z3ctable.svg
    :alt: PyPI badge
