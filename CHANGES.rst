@@ -7,7 +7,7 @@ Changelog
 
 - Drop support for python 2.7 and Plone 4.3.
   [wboudabous, aduchene]
-- Plone 6.0 & Plone 6.1 compatibilities.
+- Plone 6.2 compatibility.
   [pbauer, wboudabous, aduchene]
 - Plone 6.2 compatibility, Plone 6.0 dropped.
   [chris-adam]
@@ -20,6 +20,8 @@ Changelog
 - Wide tables scroll horizontally (`table-responsive`).
   [chris-adam]
 - Uninstall removes the JS bundles.
+  [chris-adam]
+- Dropped support for Plone versions below 6.2.
   [chris-adam]
 
 2.28 (2024-09-18)

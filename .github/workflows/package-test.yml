@@ -11,8 +11,6 @@ jobs:
             matrix:
                 include:
                     - python_version: '3.13'
-                      plone_version: '6.1'
-                    - python_version: '3.13'
                       plone_version: '6.2'
         with:
             buildout_config_file: test-${{ matrix.plone_version }}.cfg
@@ -25,7 +23,7 @@ jobs:
     coverage:
         uses: IMIO/gha-workflows/.github/workflows/package-test-coverage.yml@v1
         with:
-            buildout_config_file: test-6.1.cfg
+            buildout_config_file: test-6.2.cfg
             python_version: 3.13
-            requirements_file: requirements-6.1.txt
+            requirements_file: requirements-6.2.txt
             test_command: 'uvx coverage run bin/test -t !robot >> $GITHUB_STEP_SUMMARY'
