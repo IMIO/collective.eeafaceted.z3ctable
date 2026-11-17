@@ -32,3 +32,8 @@ lib64
 !src/collective
 pyvenv.cfg
 .idea
+.plone-version
+.plone*
+checkversion*.html
+.python-version
+CACHEDIR.TAG

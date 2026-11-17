@@ -2,12 +2,11 @@
   xmlns:tal="http://xml.zope.org/namespaces/tal"
   xmlns:metal="http://xml.zope.org/namespaces/metal"
   xmlns:i18n="http://xml.zope.org/namespaces/i18n"
-  metal:use-macro="context/main_template/macros/master"
-  i18n:domain="collective.eeafaceted.z3ctable">
+  metal:use-macro="context/main_template/macros/master">
 
 <body>
   <metal:content-core fill-slot="content-core">
-    <metal:block define-macro="content-core">
+    <metal:block define-macro="content-core" i18n:domain="collective.eeafaceted.z3ctable">
       <div tal:define="batch python: folderContents;">
 
         <div metal:use-macro="context/global_statusmessage/macros/portal_message">
@@ -38,7 +37,7 @@
         </div>
 
         <div style="clear: both;"></div>
-        <div class="eea-preview-items"
+        <div class="eea-preview-items table-responsive"
              tal:condition="batch/sequence_length"
              tal:define="table_view nocall:context/@@faceted-table-view;">
           <span tal:replace="structure python:table_view.render_table(batch)" />
